@@ -1,0 +1,193 @@
+{
+  "collections": {
+    "users": {
+      "fields": {
+        "id": "string",
+        "email": "string",
+        "displayName": "string",
+        "role": "string (admin|manager|employee)",
+        "teamId": "string (optional)",
+        "createdAt": "timestamp",
+        "updatedAt": "timestamp",
+        "createdBy": "string",
+        "permissions": "array of strings"
+      },
+      "indexes": [
+        "email",
+        "role",
+        "teamId"
+      ]
+    },
+    "teams": {
+      "fields": {
+        "id": "string",
+        "name": "string",
+        "members": "array of strings",
+        "managerId": "string",
+        "createdAt": "timestamp",
+        "updatedAt": "timestamp",
+        "createdBy": "string",
+        "permissions": "array of strings"
+      },
+      "indexes": [
+        "managerId",
+        "members"
+      ]
+    },
+    "chats": {
+      "fields": {
+        "id": "string",
+        "type": "string (direct|group|notice)",
+        "participants": "array of strings",
+        "name": "string (optional)",
+        "createdAt": "timestamp",
+        "updatedAt": "timestamp",
+        "createdBy": "string",
+        "permissions": "array of strings"
+      },
+      "indexes": [
+        "type",
+        "participants"
+      ]
+    },
+    "messages": {
+      "fields": {
+        "id": "string",
+        "chatId": "string",
+        "senderId": "string",
+        "content": "string",
+        "type": "string (text|image|file)",
+        "fileUrl": "string (optional)",
+        "reactions": "map of arrays",
+        "mentions": "array of strings",
+        "isEdited": "boolean",
+        "createdAt": "timestamp",
+        "updatedAt": "timestamp",
+        "readBy": "array of strings"
+      },
+      "indexes": [
+        "chatId",
+        "senderId",
+        "createdAt"
+      ]
+    },
+    "approvals": {
+      "fields": {
+        "id": "string",
+        "type": "string (vacation|expense|purchase|quote|contract)",
+        "requesterId": "string",
+        "status": "string (draft|submitted|reviewing|approved|rejected)",
+        "approvers": "array of strings",
+        "currentApprover": "string (optional)",
+        "data": "map",
+        "pdfUrl": "string (optional)",
+        "history": "array of maps",
+        "createdAt": "timestamp",
+        "updatedAt": "timestamp",
+        "createdBy": "string",
+        "permissions": "array of strings"
+      },
+      "indexes": [
+        "requesterId",
+        "status",
+        "type"
+      ]
+    },
+    "tasks": {
+      "fields": {
+        "id": "string",
+        "title": "string",
+        "description": "string",
+        "assigneeId": "string",
+        "status": "string (backlog|in-progress|done)",
+        "priority": "string (low|medium|high)",
+        "dueDate": "timestamp (optional)",
+        "comments": "array of maps",
+        "attachments": "array of strings",
+        "createdAt": "timestamp",
+        "updatedAt": "timestamp",
+        "createdBy": "string",
+        "permissions": "array of strings"
+      },
+      "indexes": [
+        "assigneeId",
+        "status",
+        "priority"
+      ]
+    },
+    "schedules": {
+      "fields": {
+        "id": "string",
+        "title": "string",
+        "description": "string",
+        "startTime": "timestamp",
+        "endTime": "timestamp",
+        "participants": "array of strings",
+        "type": "string (meeting|event|personal)",
+        "createdAt": "timestamp",
+        "updatedAt": "timestamp",
+        "createdBy": "string",
+        "permissions": "array of strings"
+      },
+      "indexes": [
+        "participants",
+        "startTime",
+        "type"
+      ]
+    },
+    "notices": {
+      "fields": {
+        "id": "string",
+        "title": "string",
+        "content": "string",
+        "authorId": "string",
+        "isPublished": "boolean",
+        "publishAt": "timestamp (optional)",
+        "attachments": "array of strings",
+        "versions": "array of maps",
+        "createdAt": "timestamp",
+        "updatedAt": "timestamp",
+        "createdBy": "string",
+        "permissions": "array of strings"
+      },
+      "indexes": [
+        "authorId",
+        "isPublished",
+        "publishAt"
+      ]
+    },
+    "files": {
+      "fields": {
+        "id": "string",
+        "name": "string",
+        "url": "string",
+        "size": "number",
+        "type": "string",
+        "uploadedBy": "string",
+        "folderId": "string (optional)",
+        "createdAt": "timestamp",
+        "updatedAt": "timestamp",
+        "permissions": "array of strings"
+      },
+      "indexes": [
+        "uploadedBy",
+        "folderId",
+        "type"
+      ]
+    },
+    "logs": {
+      "fields": {
+        "id": "string",
+        "action": "string",
+        "userId": "string",
+        "details": "map",
+        "timestamp": "timestamp"
+      },
+      "indexes": [
+        "userId",
+        "timestamp",
+        "action"
+      ]
+    }
+  }
+}
