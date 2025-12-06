@@ -300,16 +300,16 @@ const Calendar: React.FC = () => {
 
           {/* Calendar Header */}
           <div className="bg-white shadow rounded-lg">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-4">
-                  <h2 className="text-lg font-medium text-gray-900">
+            <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
+                <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
+                  <h2 className="text-base sm:text-lg font-medium text-gray-900">
                     {currentDate.getFullYear()}년 {monthNames[currentDate.getMonth()]}
                   </h2>
                   <div className="flex space-x-1">
                     <button
                       onClick={() => setViewMode('month')}
-                      className={`px-3 py-1 text-sm rounded-md ${
+                      className={`px-2 sm:px-3 py-1 text-xs sm:text-sm rounded-md ${
                         viewMode === 'month'
                           ? 'bg-blue-100 text-blue-700'
                           : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
@@ -319,7 +319,7 @@ const Calendar: React.FC = () => {
                     </button>
                     <button
                       onClick={() => setViewMode('week')}
-                      className={`px-3 py-1 text-sm rounded-md ${
+                      className={`px-2 sm:px-3 py-1 text-xs sm:text-sm rounded-md ${
                         viewMode === 'week'
                           ? 'bg-blue-100 text-blue-700'
                           : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
@@ -329,7 +329,7 @@ const Calendar: React.FC = () => {
                     </button>
                     <button
                       onClick={() => setViewMode('day')}
-                      className={`px-3 py-1 text-sm rounded-md ${
+                      className={`px-2 sm:px-3 py-1 text-xs sm:text-sm rounded-md ${
                         viewMode === 'day'
                           ? 'bg-blue-100 text-blue-700'
                           : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
@@ -338,43 +338,30 @@ const Calendar: React.FC = () => {
                       일
                     </button>
                   </div>
-                  <div className="flex items-center space-x-4">
-                    <select
-                      value={filterType}
-                      onChange={(e) => setFilterType(e.target.value)}
-                      className="px-3 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="all">모든 일정</option>
-                      <option value="my">내 일정</option>
-                      <option value="team">팀 일정</option>
-                      <option value="public">공개 일정</option>
-                    </select>
-                  </div>
                 </div>
-                <div className="flex items-center space-x-4">
+                <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
                   <select
                     value={filterType}
                     onChange={(e) => setFilterType(e.target.value)}
-                    className="text-sm border border-gray-300 rounded-md px-3 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="text-xs sm:text-sm border border-gray-300 rounded-md px-2 sm:px-3 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="all">모든 일정</option>
-                    <option value="meeting">회의</option>
-                    <option value="personal">개인</option>
-                    <option value="deadline">마감</option>
-                    <option value="other">기타</option>
+                    <option value="my">내 일정</option>
+                    <option value="team">팀 일정</option>
+                    <option value="public">공개 일정</option>
                   </select>
                   <div className="flex space-x-2">
                     <button
                       onClick={() => navigateMonth('prev')}
-                      className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md"
+                      className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
                     >
-                      <ChevronLeftIcon className="h-5 w-5" />
+                      <ChevronLeftIcon className="h-4 w-4 sm:h-5 sm:w-5" />
                     </button>
                     <button
                       onClick={() => navigateMonth('next')}
-                      className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md"
+                      className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
                     >
-                      <ChevronRightIcon className="h-5 w-5" />
+                      <ChevronRightIcon className="h-4 w-4 sm:h-5 sm:w-5" />
                     </button>
                   </div>
                 </div>
@@ -382,12 +369,13 @@ const Calendar: React.FC = () => {
             </div>
 
             {/* Calendar Grid */}
-            <div className="p-6">
+            <div className="p-2 sm:p-6">
               {/* Day headers */}
-              <div className="grid grid-cols-7 gap-1 mb-4">
+              <div className="grid grid-cols-7 gap-1 mb-2 sm:mb-4">
                 {['일', '월', '화', '수', '목', '금', '토'].map((day) => (
-                  <div key={day} className="p-2 text-center text-sm font-medium text-gray-500">
-                    {day}
+                  <div key={day} className="p-1 sm:p-2 text-center text-xs sm:text-sm font-medium text-gray-500">
+                    <span className="hidden sm:inline">{day}</span>
+                    <span className="sm:hidden">{day.charAt(0)}</span>
                   </div>
                 ))}
               </div>
@@ -397,7 +385,7 @@ const Calendar: React.FC = () => {
                 {days.map((day, index) => (
                   <div
                     key={index}
-                    className={`min-h-[120px] p-2 border border-gray-200 ${
+                    className={`min-h-[80px] sm:min-h-[120px] p-1 sm:p-2 border border-gray-200 ${
                       day ? 'hover:bg-gray-50 cursor-pointer' : ''
                     } ${isToday(day || 0) ? 'bg-blue-50 border-blue-300' : ''}`}
                   >
@@ -469,21 +457,21 @@ const Calendar: React.FC = () => {
       {/* New Event Modal */}
       <Dialog open={showNewEvent} onClose={() => setShowNewEvent(false)} className="relative z-50">
         <div className="fixed inset-0 bg-black bg-opacity-25" />
-        <div className="fixed inset-0 flex items-center justify-center p-4">
-          <Dialog.Panel className="w-full max-w-md bg-white rounded-lg shadow-xl">
-            <div className="flex items-center justify-between p-6 border-b border-gray-200">
-              <Dialog.Title className="text-lg font-medium text-gray-900">
+        <div className="fixed inset-0 flex items-center justify-center p-2 sm:p-4">
+          <Dialog.Panel className="w-full max-w-md bg-white rounded-lg shadow-xl max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200">
+              <Dialog.Title className="text-base sm:text-lg font-medium text-gray-900 pr-2">
                 새 일정 추가
               </Dialog.Title>
               <button
                 onClick={() => setShowNewEvent(false)}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100 transition-colors"
               >
-                <XMarkIcon className="h-6 w-6" />
+                <XMarkIcon className="h-5 w-5 sm:h-6 sm:w-6" />
               </button>
             </div>
 
-            <div className="p-6 space-y-4">
+            <div className="p-4 sm:p-6 space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   제목 *
@@ -492,7 +480,7 @@ const Calendar: React.FC = () => {
                   type="text"
                   value={newEventForm.title}
                   onChange={(e) => setNewEventForm(prev => ({ ...prev, title: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="일정 제목을 입력하세요"
                 />
               </div>
@@ -762,17 +750,17 @@ const Calendar: React.FC = () => {
               )}
             </div>
 
-            <div className="flex justify-end space-x-3 p-6 border-t border-gray-200">
+            <div className="flex flex-col-reverse sm:flex-row justify-end space-y-2 space-y-reverse sm:space-y-0 sm:space-x-3 p-4 sm:p-6 border-t border-gray-200">
               <button
                 onClick={() => setShowNewEvent(false)}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md"
+                className="w-full sm:w-auto px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
               >
                 취소
               </button>
               <button
                 onClick={handleCreateEvent}
                 disabled={!newEventForm.title.trim() || !newEventForm.startDate}
-                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 rounded-md"
+                className="w-full sm:w-auto px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 rounded-md transition-colors"
               >
                 생성
               </button>

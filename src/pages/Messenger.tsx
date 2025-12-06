@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useChat } from '../hooks/useChat';
 import { useAuth } from '../hooks/useAuth';
-import { PaperAirplaneIcon, PlusIcon, ChatBubbleLeftIcon, UsersIcon, MegaphoneIcon } from '@heroicons/react/24/outline';
+import { PaperAirplaneIcon, PlusIcon, ChatBubbleLeftIcon, UsersIcon, MegaphoneIcon, Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import MessageItem from '../components/molecules/MessageItem';
@@ -27,6 +27,7 @@ const Messenger: React.FC = () => {
 
   const [messageInput, setMessageInput] = useState('');
   const [showNewChat, setShowNewChat] = useState(false);
+  const [showSidebar, setShowSidebar] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   console.log('Messenger: Component rendered', { user, chats, loading, currentChat, messages });
@@ -159,8 +160,18 @@ const Messenger: React.FC = () => {
 
   return (
     <div className="flex h-full bg-gray-50 w-full px-4 sm:px-6 lg:px-8 py-8">
+      {/* Mobile Sidebar Overlay */}
+      {showSidebar && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+          onClick={() => setShowSidebar(false)}
+        />
+      )}
+
       {/* Chat List Sidebar */}
-      <div className="w-80 bg-white border-r border-gray-200 flex flex-col">
+      <div className={`fixed lg:static inset-y-0 left-0 z-50 w-80 bg-white border-r border-gray-200 flex flex-col transform transition-transform duration-300 ease-in-out lg:transform-none ${
+        showSidebar ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+      }`}>
         <div className="p-4 border-b border-gray-200">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-gray-900">메신저</h2>
@@ -168,19 +179,19 @@ const Messenger: React.FC = () => {
               {loading && <div className="text-xs text-gray-500">로딩중...</div>}
               <button
                 onClick={handleTestConnection}
-                className="px-3 py-1 text-xs bg-purple-500 text-white rounded hover:bg-purple-600"
+                className="hidden sm:inline-flex px-3 py-1 text-xs bg-purple-500 text-white rounded hover:bg-purple-600"
               >
                 연결 테스트
               </button>
               <button
                 onClick={handleCreateSampleData}
-                className="px-3 py-1 text-xs bg-green-500 text-white rounded hover:bg-green-600"
+                className="hidden sm:inline-flex px-3 py-1 text-xs bg-green-500 text-white rounded hover:bg-green-600"
               >
                 샘플 추가
               </button>
               <button
                 onClick={() => loadChats()}
-                className="px-3 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600"
+                className="hidden sm:inline-flex px-3 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600"
               >
                 새로고침
               </button>
@@ -190,7 +201,35 @@ const Messenger: React.FC = () => {
               >
                 <PlusIcon className="h-5 w-5" />
               </button>
+              <button
+                onClick={() => setShowSidebar(false)}
+                className="lg:hidden p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100"
+              >
+                <XMarkIcon className="h-5 w-5" />
+              </button>
             </div>
+          </div>
+
+          {/* Mobile Action Buttons */}
+          <div className="mt-3 space-y-2 sm:hidden">
+            <button
+              onClick={handleTestConnection}
+              className="w-full px-3 py-2 text-xs bg-purple-500 text-white rounded hover:bg-purple-600"
+            >
+              연결 테스트
+            </button>
+            <button
+              onClick={handleCreateSampleData}
+              className="w-full px-3 py-2 text-xs bg-green-500 text-white rounded hover:bg-green-600"
+            >
+              샘플 추가
+            </button>
+            <button
+              onClick={() => loadChats()}
+              className="w-full px-3 py-2 text-xs bg-blue-500 text-white rounded hover:bg-blue-600"
+            >
+              새로고침
+            </button>
           </div>
 
           {showNewChat && (
@@ -262,16 +301,22 @@ const Messenger: React.FC = () => {
         {currentChat ? (
           <>
             {/* Chat Header */}
-            <div className="bg-white border-b border-gray-200 px-6 py-4">
+            <div className="bg-white border-b border-gray-200 px-4 sm:px-6 py-4">
               <div className="flex items-center">
-                <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center mr-3">
+                <button
+                  onClick={() => setShowSidebar(true)}
+                  className="lg:hidden p-2 mr-3 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md"
+                >
+                  <Bars3Icon className="h-5 w-5" />
+                </button>
+                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gray-300 rounded-full flex items-center justify-center mr-3">
                   {getChatIcon(currentChat.type)}
                 </div>
-                <div>
-                  <h3 className="text-lg font-medium text-gray-900">
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-base sm:text-lg font-medium text-gray-900 truncate">
                     {currentChat.name || `${currentChat.participants.length}명의 채팅`}
                   </h3>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-xs sm:text-sm text-gray-500">
                     {currentChat.type === 'notice' ? '공지사항' :
                      currentChat.type === 'group' ? '그룹 채팅' : '개인 채팅'}
                   </p>
@@ -310,11 +355,11 @@ const Messenger: React.FC = () => {
             </div>
 
             {/* Message Input */}
-            <div className="bg-white dark:bg-neutral-800 border-t border-neutral-200 dark:border-neutral-700 p-4">
-              <form onSubmit={handleSendMessage} className="flex space-x-4">
+            <div className="bg-white dark:bg-neutral-800 border-t border-neutral-200 dark:border-neutral-700 p-3 sm:p-4">
+              <form onSubmit={handleSendMessage} className="flex space-x-2 sm:space-x-4">
                 <div className="flex-1 flex items-center space-x-2">
                   <label className="cursor-pointer">
-                    <PlusIcon className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                    <PlusIcon className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400 hover:text-gray-600" />
                     <input
                       type="file"
                       onChange={handleFileUpload}
@@ -338,9 +383,9 @@ const Messenger: React.FC = () => {
                 <button
                   type="submit"
                   disabled={!messageInput.trim()}
-                  className="btn btn-primary px-6 py-2"
+                  className="btn btn-primary px-3 sm:px-6 py-2"
                 >
-                  <PaperAirplaneIcon className="h-5 w-5" />
+                  <PaperAirplaneIcon className="h-4 w-4 sm:h-5 sm:w-5" />
                 </button>
               </form>
             </div>

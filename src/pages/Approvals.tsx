@@ -129,10 +129,10 @@ const Approvals: React.FC = () => {
       {/* Tabs */}
       <div className="mt-6">
         <div className="border-b border-gray-200">
-          <nav className="-mb-px flex space-x-8">
+          <nav className="-mb-px flex space-x-4 sm:space-x-8 overflow-x-auto">
             <button
               onClick={() => setActiveTab('pending')}
-              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+              className={`py-2 px-1 border-b-2 font-medium text-xs sm:text-sm whitespace-nowrap ${
                 activeTab === 'pending'
                   ? 'border-blue-500 text-blue-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -142,7 +142,7 @@ const Approvals: React.FC = () => {
             </button>
             <button
               onClick={() => setActiveTab('my-requests')}
-              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+              className={`py-2 px-1 border-b-2 font-medium text-xs sm:text-sm whitespace-nowrap ${
                 activeTab === 'my-requests'
                   ? 'border-blue-500 text-blue-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -152,7 +152,7 @@ const Approvals: React.FC = () => {
             </button>
             <button
               onClick={() => setActiveTab('history')}
-              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+              className={`py-2 px-1 border-b-2 font-medium text-xs sm:text-sm whitespace-nowrap ${
                 activeTab === 'history'
                   ? 'border-blue-500 text-blue-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -166,18 +166,19 @@ const Approvals: React.FC = () => {
 
       {showNewApproval && (
         <div className="bg-white shadow rounded-lg">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h3 className="text-lg font-medium text-gray-900">결재 양식 선택</h3>
+          <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
+            <h3 className="text-base sm:text-lg font-medium text-gray-900">결재 양식 선택</h3>
           </div>
-          <div className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="p-4 sm:p-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
               {approvalTemplates.map((template) => (
                 <button
                   key={template.id}
-                  className="p-4 border border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  onClick={() => setSelectedTemplate(template.id)}
+                  className="p-3 sm:p-4 border border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
                 >
                   <div className="text-center">
-                    <div className="text-2xl mb-2">{template.icon}</div>
+                    <div className="text-xl sm:text-2xl mb-2">{template.icon}</div>
                     <h4 className="text-sm font-medium text-gray-900">{template.name}</h4>
                     <p className="text-xs text-gray-500 mt-1">{template.description}</p>
                   </div>
@@ -189,8 +190,8 @@ const Approvals: React.FC = () => {
       )}
 
       <div className="bg-white shadow overflow-hidden sm:rounded-md">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h3 className="text-lg font-medium text-gray-900">
+        <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
+          <h3 className="text-base sm:text-lg font-medium text-gray-900">
             {activeTab === 'pending' && '결재 대기 목록'}
             {activeTab === 'my-requests' && '내 결재 목록'}
             {activeTab === 'history' && '결재 이력'}
@@ -208,20 +209,20 @@ const Approvals: React.FC = () => {
             })
             .map((approval) => (
             <li key={approval.id}>
-              <div className="px-6 py-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center">
+              <div className="px-4 sm:px-6 py-4">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
+                  <div className="flex items-center flex-1 min-w-0">
                     {getStatusIcon(approval.status)}
-                    <div className="ml-3">
-                      <p className="text-sm font-medium text-gray-900">{getApprovalTypeText(approval.type)}</p>
-                      <p className="text-sm text-gray-500">신청자: {approval.requesterId}</p>
+                    <div className="ml-3 flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900 truncate">{getApprovalTypeText(approval.type)}</p>
+                      <p className="text-xs sm:text-sm text-gray-500">신청자: {approval.requesterId}</p>
                       {approval.data && (approval.data as any).amount && (
-                        <p className="text-sm text-gray-500">금액: {(approval.data as any).amount}</p>
+                        <p className="text-xs sm:text-sm text-gray-500">금액: {(approval.data as any).amount}</p>
                       )}
                     </div>
                   </div>
-                  <div className="flex items-center space-x-4">
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(approval.status)}`}>
+                  <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
+                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full self-start sm:self-center ${getStatusColor(approval.status)}`}>
                       {getStatusText(approval.status)}
                     </span>
                     <div className="flex items-center space-x-2">
@@ -233,16 +234,16 @@ const Approvals: React.FC = () => {
                         <DocumentArrowDownIcon className="h-4 w-4" />
                       </button>
                       {activeTab === 'pending' && (
-                        <div className="flex space-x-2">
+                        <div className="flex flex-col sm:flex-row space-y-1 sm:space-y-0 sm:space-x-2">
                           <button
                             onClick={() => handleApprove(approval.id)}
-                            className="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                            className="inline-flex items-center justify-center px-3 py-1 border border-transparent text-xs font-medium rounded text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
                           >
                             승인
                           </button>
                           <button
                             onClick={() => handleReject(approval.id)}
-                            className="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                            className="inline-flex items-center justify-center px-3 py-1 border border-transparent text-xs font-medium rounded text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
                           >
                             반려
                           </button>
