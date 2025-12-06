@@ -190,13 +190,12 @@ src/
 - GitHub → Vercel 자동 배포
 - Firebase Hosting으로 Admin Console 분리 가능(A/B)
 
-## 개발 가이드라인
+## 문서
 
-- Atomic Design + 재사용성 우선
-- Custom Hook 기반 상태 관리
-- TypeScript 철저 적용
-- Framer Motion으로 애니메이션 구현
-- 모바일 우선 반응형 디자인
+- [API 문서](./API.md) - Firebase API 구조 및 사용법
+- [개발자 가이드](./DEVELOPMENT.md) - 코딩 컨벤션, 개발 환경 설정, 테스트 방법
+- [시스템 아키텍처](./ARCHITECTURE.md) - 전체 시스템 설계 및 기술적 결정사항
+- [배포 가이드](./DEPLOYMENT.md) - 배포 프로세스 및 환경 설정
 
 The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
 

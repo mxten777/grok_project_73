@@ -12,29 +12,34 @@ export const useChat = () => {
 
   // Load user's chats
   const loadChats = useCallback(async () => {
-    if (!user) return;
+    if (!user?.uid) {
+      console.log('useChat: No user uid, skipping loadChats');
+      return;
+    }
 
+    console.log('useChat: Loading chats for user:', user.uid);
     setLoading(true);
     try {
       const userChats = await chatService.getUserChats(user.uid);
+      console.log('useChat: Loaded chats:', userChats);
       setChats(userChats);
     } catch (error) {
-      console.error('Error loading chats:', error);
+      console.error('useChat: Error loading chats:', error);
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [user?.uid]);
 
   // Subscribe to chat updates
   useEffect(() => {
-    if (!user) return;
+    if (!user?.uid) return;
 
     const unsubscribe = chatService.subscribeToChats(user.uid, (updatedChats) => {
       setChats(updatedChats);
     });
 
     return unsubscribe;
-  }, [user]);
+  }, [user?.uid]);
 
   // Load messages for current chat
   const loadMessages = useCallback(async (chatId: string) => {
@@ -62,7 +67,7 @@ export const useChat = () => {
 
   // Send message
   const sendMessage = useCallback(async (content: string, type: Message['type'] = 'text', fileUrl?: string) => {
-    if (!user || !currentChat) return;
+    if (!user?.uid || !currentChat) return;
 
     try {
       await messageService.sendMessage({
@@ -80,11 +85,11 @@ export const useChat = () => {
       console.error('Error sending message:', error);
       throw error;
     }
-  }, [user, currentChat]);
+  }, [user?.uid, currentChat]);
 
   // Create new chat
   const createChat = useCallback(async (participants: string[], name?: string, type: Chat['type'] = 'direct') => {
-    if (!user) return;
+    if (!user?.uid) return;
 
     try {
       const chatId = await chatService.createChat({
@@ -102,17 +107,11 @@ export const useChat = () => {
       console.error('Error creating chat:', error);
       throw error;
     }
-  }, [user, loadChats]);
-
-  // Select chat
-  const selectChat = useCallback(async (chat: Chat) => {
-    setCurrentChat(chat);
-    await loadMessages(chat.id);
-  }, [loadMessages]);
+  }, [user?.uid, loadChats]);
 
   // Mark messages as read
   const markAsRead = useCallback(async (messageIds: string[]) => {
-    if (!user) return;
+    if (!user?.uid) return;
 
     try {
       await Promise.all(
@@ -121,7 +120,59 @@ export const useChat = () => {
     } catch (error) {
       console.error('Error marking messages as read:', error);
     }
-  }, [user]);
+  }, [user?.uid]);
+
+  // Select chat
+  const selectChat = useCallback(async (chat: Chat) => {
+    setCurrentChat(chat);
+    await loadMessages(chat.id);
+
+    // Mark unread messages as read
+    if (user?.uid) {
+      const unreadMessageIds = messages
+        .filter(msg => !msg.readBy.includes(user.uid))
+        .map(msg => msg.id);
+
+      if (unreadMessageIds.length > 0) {
+        await markAsRead(unreadMessageIds);
+      }
+    }
+  }, [loadMessages, markAsRead, messages, user?.uid]);
+
+  // Start typing
+  const startTyping = useCallback(async () => {
+    if (!user?.uid || !currentChat) return;
+
+    try {
+      await chatService.startTyping(currentChat.id, user.uid);
+    } catch (error) {
+      console.error('Error starting typing:', error);
+    }
+  }, [user?.uid, currentChat]);
+
+  // Stop typing
+  const stopTyping = useCallback(async () => {
+    if (!user?.uid || !currentChat) return;
+
+    try {
+      await chatService.stopTyping(currentChat.id, user.uid);
+    } catch (error) {
+      console.error('Error stopping typing:', error);
+    }
+  }, [user?.uid, currentChat]);
+
+  // Upload file
+  const uploadFile = useCallback(async (file: File): Promise<string> => {
+    if (!currentChat) throw new Error('No current chat selected');
+
+    try {
+      const fileUrl = await messageService.uploadFile(file, currentChat.id);
+      return fileUrl;
+    } catch (error) {
+      console.error('Error uploading file:', error);
+      throw error;
+    }
+  }, [currentChat]);
 
   return {
     chats,
@@ -133,5 +184,8 @@ export const useChat = () => {
     sendMessage,
     createChat,
     markAsRead,
+    startTyping,
+    stopTyping,
+    uploadFile,
   };
 };

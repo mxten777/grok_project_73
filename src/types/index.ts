@@ -32,6 +32,7 @@ export interface Chat {
   updatedAt: Date;
   createdBy: string;
   permissions: string[];
+  typingUsers: string[];
 }
 
 // Message types

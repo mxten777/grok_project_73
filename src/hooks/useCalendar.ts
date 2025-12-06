@@ -1,16 +1,26 @@
 import { useState, useEffect } from 'react';
-import type { CalendarEvent } from '../firebase/calendarServices';
+import type { CalendarEvent, Attendee } from '../firebase/calendarServices';
 import {
   createCalendarEvent,
   getCalendarEvents,
   updateCalendarEvent,
   deleteCalendarEvent,
-  subscribeToUserCalendarEvents
+  subscribeToUserCalendarEvents,
+  getTeamCalendarEvents,
+  getPublicCalendarEvents,
+  respondToMeetingInvitation,
+  getInvitedEvents,
+  subscribeToInvitedEvents,
+  checkMeetingRoomAvailability,
+  getMeetingRooms
 } from '../firebase/calendarServices';
 import { useAuth } from './useAuth';
 
 export const useCalendar = () => {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
+  const [teamEvents, setTeamEvents] = useState<CalendarEvent[]>([]);
+  const [publicEvents, setPublicEvents] = useState<CalendarEvent[]>([]);
+  const [invitedEvents, setInvitedEvents] = useState<CalendarEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
@@ -39,6 +49,17 @@ export const useCalendar = () => {
 
     const unsubscribe = subscribeToUserCalendarEvents(user.uid, (updatedEvents) => {
       setEvents(updatedEvents);
+    });
+
+    return () => unsubscribe();
+  }, [user]);
+
+  // Subscribe to invited events
+  useEffect(() => {
+    if (!user) return;
+
+    const unsubscribe = subscribeToInvitedEvents(user.uid, (updatedEvents) => {
+      setInvitedEvents(updatedEvents);
     });
 
     return () => unsubscribe();
@@ -93,6 +114,32 @@ export const useCalendar = () => {
     });
   };
 
+  // Load team events
+  const loadTeamEvents = async (teamId: string) => {
+    if (!user) return;
+    try {
+      const teamEventsData = await getTeamCalendarEvents(teamId, user.uid);
+      setTeamEvents(teamEventsData);
+    } catch (err) {
+      console.error('Error loading team events:', err);
+    }
+  };
+
+  // Load public events
+  const loadPublicEvents = async () => {
+    try {
+      const publicEventsData = await getPublicCalendarEvents();
+      setPublicEvents(publicEventsData);
+    } catch (err) {
+      console.error('Error loading public events:', err);
+    }
+  };
+
+  // Get all visible events (user + team + public)
+  const getAllVisibleEvents = () => {
+    return [...events, ...teamEvents, ...publicEvents];
+  };
+
   // Get events for a specific month
   const getEventsForMonth = (year: number, month: number) => {
     return events.filter(event => {
@@ -110,16 +157,58 @@ export const useCalendar = () => {
       .slice(0, limit);
   };
 
+  // Respond to meeting invitation
+  const respondToInvitation = async (eventId: string, status: 'accepted' | 'declined' | 'tentative') => {
+    try {
+      setError(null);
+      if (!user) throw new Error('User not authenticated');
+      await respondToMeetingInvitation(eventId, user.uid, status);
+    } catch (err) {
+      setError('초대 응답에 실패했습니다.');
+      console.error('Error responding to invitation:', err);
+      throw err;
+    }
+  };
+
+  // Check meeting room availability
+  const checkRoomAvailability = async (roomName: string, startDate: Date, endDate: Date, excludeEventId?: string) => {
+    try {
+      return await checkMeetingRoomAvailability(roomName, startDate, endDate, excludeEventId);
+    } catch (err) {
+      console.error('Error checking room availability:', err);
+      throw err;
+    }
+  };
+
+  // Get all meeting rooms
+  const getAllMeetingRooms = async () => {
+    try {
+      return await getMeetingRooms();
+    } catch (err) {
+      console.error('Error getting meeting rooms:', err);
+      throw err;
+    }
+  };
+
   return {
     events,
+    teamEvents,
+    publicEvents,
+    invitedEvents,
     loading,
     error,
     createEvent,
     updateEvent,
     deleteEvent,
+    respondToInvitation,
+    checkRoomAvailability,
+    getAllMeetingRooms,
     getEventsForDate,
     getEventsForMonth,
     getUpcomingEvents,
+    loadTeamEvents,
+    loadPublicEvents,
+    getAllVisibleEvents,
     clearError: () => setError(null),
   };
 };

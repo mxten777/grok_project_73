@@ -1,6 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import { getFunctions } from 'firebase/functions';
 import { getMessaging } from 'firebase/messaging';
@@ -17,9 +17,18 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
+console.log('Firebase: App initialized');
 
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 export const storage = getStorage(app);
 export const functions = getFunctions(app);
 export const messaging = getMessaging(app);
+
+console.log('Firebase: Services initialized');
+
+// Connect to emulators in development
+if (process.env.NODE_ENV === 'development') {
+  console.log('Firebase: Development mode - using production Firestore');
+  // Emulator disabled due to Java requirement
+}

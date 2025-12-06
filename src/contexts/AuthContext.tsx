@@ -17,6 +17,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Development mode: auto-login with mock user
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Auth: Development mode - using mock user');
+      const mockUser = {
+        uid: 'dev-user-123',
+        email: 'dev@example.com',
+        displayName: '개발자',
+        emailVerified: true,
+        isAnonymous: false,
+        metadata: {
+          creationTime: new Date().toISOString(),
+          lastSignInTime: new Date().toISOString(),
+        },
+        providerData: [],
+        refreshToken: '',
+        tenantId: null,
+        delete: async () => {},
+        getIdToken: async () => 'mock-token',
+        getIdTokenResult: async () => ({ token: 'mock-token', claims: {}, signInProvider: 'mock', signInSecondFactor: null, expirationTime: '', issuedAtTime: '', authTime: '' }),
+        reload: async () => {},
+        toJSON: () => ({}),
+        phoneNumber: null,
+        photoURL: null,
+        providerId: 'mock',
+      } as User;
+
+      setUser(mockUser);
+      setLoading(false);
+      return;
+    }
+
+    // Production mode: use Firebase auth
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
       setLoading(false);

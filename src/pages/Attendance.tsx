@@ -30,9 +30,12 @@ const Attendance: React.FC = () => {
   const today = new Date();
 
   useEffect(() => {
-    // Generate QR code for check-in/check-out
-    generateQRCode().then(setQrCodeData);
-  }, [generateQRCode]);
+    // Generate QR code for check-in/check-out only once
+    if (!qrCodeData) {
+      generateQRCode().then(setQrCodeData);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     // Get current location

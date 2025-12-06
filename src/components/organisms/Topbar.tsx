@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../hooks/useAuth';
-import { UserCircleIcon, Bars3Icon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
+import { UserCircleIcon, Bars3Icon, MagnifyingGlassIcon, MoonIcon, SunIcon } from '@heroicons/react/24/outline';
 import NotificationBell from '../molecules/NotificationBell';
 
 interface TopbarProps {
@@ -11,8 +11,21 @@ const Topbar: React.FC<TopbarProps> = ({ onMenuClick }) => {
   const { user, logout } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const [darkMode, setDarkMode] = useState(false);
 
   const [showSearchResults, setShowSearchResults] = useState(false);
+
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [darkMode]);
+
+  const toggleDarkMode = () => {
+    setDarkMode(!darkMode);
+  };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,7 +51,7 @@ const Topbar: React.FC<TopbarProps> = ({ onMenuClick }) => {
   };
 
   return (
-    <div className="bg-white shadow-sm border-b border-gray-200">
+    <div className="bg-white dark:bg-neutral-800 shadow-soft border-b border-neutral-200 dark:border-neutral-700 transition-colors duration-300">
       <div className="px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex">
@@ -46,22 +59,22 @@ const Topbar: React.FC<TopbarProps> = ({ onMenuClick }) => {
               {/* Mobile menu button */}
               <button
                 type="button"
-                className="md:hidden -ml-0.5 -mt-0.5 h-12 w-12 inline-flex items-center justify-center rounded-md text-gray-500 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500"
+                className="md:hidden -ml-0.5 -mt-0.5 h-12 w-12 inline-flex items-center justify-center rounded-lg text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100 hover:bg-neutral-100 dark:hover:bg-neutral-700 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500 transition-colors duration-200"
                 onClick={onMenuClick}
               >
                 <span className="sr-only">메뉴 열기</span>
                 <Bars3Icon className="h-6 w-6" aria-hidden="true" />
               </button>
-              <h2 className="ml-2 md:ml-0 text-lg font-semibold text-gray-900">대시보드</h2>
+              <h2 className="ml-2 md:ml-0 text-lg font-semibold text-neutral-900 dark:text-neutral-100 font-display">대시보드</h2>
             </div>
           </div>
-          <div className="hidden sm:ml-6 sm:flex sm:items-center">
+          <div className="hidden sm:ml-6 sm:flex sm:items-center space-x-4">
             {/* 글로벌 검색 */}
             <div className="relative">
               <form onSubmit={handleSearch} className="relative">
-                <div className={`relative ${isSearchFocused ? 'ring-2 ring-blue-500 ring-opacity-50' : ''}`}>
+                <div className={`relative ${isSearchFocused ? 'ring-2 ring-primary-500 ring-opacity-50' : ''} transition-all duration-200`}>
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
+                    <MagnifyingGlassIcon className="h-5 w-5 text-neutral-400" />
                   </div>
                   <input
                     type="text"
@@ -70,53 +83,53 @@ const Topbar: React.FC<TopbarProps> = ({ onMenuClick }) => {
                     onChange={(e) => setSearchQuery(e.target.value)}
                     onFocus={handleSearchFocus}
                     onBlur={handleSearchBlur}
-                    className="block w-80 pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-0 focus:border-blue-500 sm:text-sm"
+                    className="input w-80 pl-10 pr-3 py-2 bg-neutral-50 dark:bg-neutral-700 border-neutral-300 dark:border-neutral-600 text-neutral-900 dark:text-neutral-100 placeholder-neutral-500 dark:placeholder-neutral-400 focus:border-primary-500 dark:focus:border-primary-400"
                   />
                 </div>
               </form>
 
               {/* 검색 결과 드롭다운 */}
               {showSearchResults && searchQuery.trim() && (
-                <div className="absolute z-50 mt-1 w-80 bg-white shadow-lg max-h-96 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
-                  <div className="px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <div className="absolute z-50 mt-2 w-80 bg-white dark:bg-neutral-800 shadow-large max-h-96 rounded-lg py-2 text-base ring-1 ring-neutral-200 dark:ring-neutral-700 overflow-auto focus:outline-none sm:text-sm border border-neutral-200 dark:border-neutral-700">
+                  <div className="px-4 py-2 text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
                     빠른 검색 결과
                   </div>
 
                   {/* 프로젝트 결과 */}
-                  <div className="border-t border-gray-100">
-                    <div className="px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <div className="border-t border-neutral-100 dark:border-neutral-700">
+                    <div className="px-4 py-2 text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
                       프로젝트
                     </div>
-                    <a href="#" className="flex items-center px-4 py-2 hover:bg-gray-100">
-                      <div className="flex-shrink-0 w-8 h-8 bg-blue-500 rounded-md flex items-center justify-center">
+                    <a href="#" className="flex items-center px-4 py-3 hover:bg-neutral-50 dark:hover:bg-neutral-700 transition-colors duration-200">
+                      <div className="flex-shrink-0 w-8 h-8 bg-primary-500 rounded-lg flex items-center justify-center">
                         <span className="text-white text-xs font-medium">P</span>
                       </div>
                       <div className="ml-3">
-                        <p className="text-sm font-medium text-gray-900">웹사이트 리뉴얼 프로젝트</p>
-                        <p className="text-xs text-gray-500">진행중 • 마감일: 2025-12-31</p>
+                        <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100">웹사이트 리뉴얼 프로젝트</p>
+                        <p className="text-xs text-neutral-500 dark:text-neutral-400">진행중 • 마감일: 2025-12-31</p>
                       </div>
                     </a>
                   </div>
 
                   {/* 사용자 결과 */}
-                  <div className="border-t border-gray-100">
-                    <div className="px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <div className="border-t border-neutral-100 dark:border-neutral-700">
+                    <div className="px-4 py-2 text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
                       사용자
                     </div>
-                    <a href="#" className="flex items-center px-4 py-2 hover:bg-gray-100">
-                      <div className="flex-shrink-0 w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+                    <a href="#" className="flex items-center px-4 py-3 hover:bg-neutral-50 dark:hover:bg-neutral-700 transition-colors duration-200">
+                      <div className="flex-shrink-0 w-8 h-8 bg-secondary-500 rounded-full flex items-center justify-center">
                         <span className="text-white text-xs font-medium">김</span>
                       </div>
                       <div className="ml-3">
-                        <p className="text-sm font-medium text-gray-900">김철수</p>
-                        <p className="text-xs text-gray-500">개발팀 • chulsoo@example.com</p>
+                        <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100">김철수</p>
+                        <p className="text-xs text-neutral-500 dark:text-neutral-400">개발팀 • chulsoo@example.com</p>
                       </div>
                     </a>
                   </div>
 
                   {/* 더 많은 결과 보기 */}
-                  <div className="border-t border-gray-100">
-                    <a href="#" className="block px-4 py-2 text-sm text-blue-600 hover:bg-gray-100">
+                  <div className="border-t border-neutral-100 dark:border-neutral-700">
+                    <a href="#" className="block px-4 py-3 text-sm text-primary-600 dark:text-primary-400 hover:bg-neutral-50 dark:hover:bg-neutral-700 transition-colors duration-200">
                       더 많은 결과 보기 →
                     </a>
                   </div>
@@ -124,24 +137,33 @@ const Topbar: React.FC<TopbarProps> = ({ onMenuClick }) => {
               )}
             </div>
 
+            {/* Dark Mode Toggle */}
+            <button
+              onClick={toggleDarkMode}
+              className="p-2 rounded-lg text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100 hover:bg-neutral-100 dark:hover:bg-neutral-700 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500 transition-colors duration-200"
+              title={darkMode ? '라이트 모드로 전환' : '다크 모드로 전환'}
+            >
+              {darkMode ? <SunIcon className="h-5 w-5" /> : <MoonIcon className="h-5 w-5" />}
+            </button>
+
             <NotificationBell />
 
             <div className="ml-3 relative">
               <div className="flex items-center">
                 <button
                   type="button"
-                  className="bg-white flex text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                  className="bg-neutral-100 dark:bg-neutral-700 flex text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors duration-200"
                   id="user-menu-button"
                   aria-expanded="false"
                   aria-haspopup="true"
                 >
                   <span className="sr-only">사용자 메뉴 열기</span>
-                  <UserCircleIcon className="h-8 w-8 text-gray-400" aria-hidden="true" />
+                  <UserCircleIcon className="h-8 w-8 text-neutral-400" aria-hidden="true" />
                 </button>
-                <span className="ml-2 text-sm font-medium text-gray-700">{user?.displayName || user?.email}</span>
+                <span className="ml-3 text-sm font-medium text-neutral-700 dark:text-neutral-300">{user?.displayName || user?.email}</span>
                 <button
                   onClick={logout}
-                  className="ml-4 text-sm text-gray-500 hover:text-gray-700"
+                  className="ml-4 text-sm text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300 transition-colors duration-200"
                 >
                   로그아웃
                 </button>

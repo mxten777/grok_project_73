@@ -24,10 +24,14 @@ function App() {
       <PWAInstallPrompt />
       <Router>
           <Suspense fallback={
-            <div className="min-h-screen flex items-center justify-center bg-gray-50">
+            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-neutral-50 to-neutral-100 dark:from-neutral-900 dark:to-neutral-800">
               <div className="text-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-                <p className="mt-4 text-gray-600">로딩 중...</p>
+                <div className="relative">
+                  <div className="animate-spin rounded-full h-16 w-16 border-4 border-primary-200 border-t-primary-600 mx-auto"></div>
+                  <div className="absolute inset-0 rounded-full h-16 w-16 border-4 border-transparent border-t-secondary-500 animate-spin mx-auto" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }}></div>
+                </div>
+                <p className="mt-6 text-lg font-medium text-neutral-900 dark:text-neutral-100 font-display">로딩 중...</p>
+                <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-400">잠시만 기다려주세요</p>
               </div>
             </div>
           }>

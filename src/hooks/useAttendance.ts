@@ -146,7 +146,7 @@ export const useAttendance = () => {
   };
 
   // Generate QR code for check-in/check-out
-  const generateQRCode = async (type: 'checkin' | 'checkout' = 'checkin'): Promise<string> => {
+  const generateQRCode = useCallback(async (type: 'checkin' | 'checkout' = 'checkin'): Promise<string> => {
     if (!user) throw new Error('사용자 정보가 없습니다.');
 
     try {
@@ -164,7 +164,7 @@ export const useAttendance = () => {
       console.error('Error generating QR code:', err);
       throw new Error('QR 코드 생성에 실패했습니다.');
     }
-  };
+  }, [user]);
 
   // Scan and validate QR code
   const scanQRCode = (qrData: string) => {

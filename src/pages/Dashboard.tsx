@@ -27,74 +27,69 @@ const Dashboard: React.FC = () => {
     { month: '6월', 승인: 58, 거절: 2, 대기: 7 },
   ];
   return (
-    <div className="w-full px-4 sm:px-6 lg:px-8 py-8">
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">대시보드</h1>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-        <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="p-5">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-indigo-500 rounded-md flex items-center justify-center">
-                  <span className="text-white text-sm font-medium">일</span>
-                </div>
+    <div className="w-full px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-neutral-900 dark:text-neutral-100 font-display mb-2">대시보드</h1>
+        <p className="text-neutral-600 dark:text-neutral-400">오늘의 업무 현황을 확인하세요</p>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="card p-6 hover:shadow-medium transition-shadow duration-300 animate-slide-in">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <div className="w-12 h-12 bg-gradient-to-br from-primary-400 to-primary-600 rounded-xl flex items-center justify-center shadow-soft">
+                <span className="text-white text-lg font-semibold">일</span>
               </div>
-              <div className="ml-5 flex-1 min-w-0">
-                <dl>
-                  <dt className="text-sm font-medium text-gray-500">오늘 일정</dt>
-                  <dd className="text-lg font-medium text-gray-900">3</dd>
-                </dl>
-              </div>
+            </div>
+            <div className="ml-4 flex-1 min-w-0">
+              <dl>
+                <dt className="text-sm font-medium text-neutral-500 dark:text-neutral-400">오늘 일정</dt>
+                <dd className="text-2xl font-bold text-neutral-900 dark:text-neutral-100 mt-1">3</dd>
+              </dl>
             </div>
           </div>
         </div>
-        <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="p-5">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-green-500 rounded-md flex items-center justify-center">
-                  <span className="text-white text-sm font-medium">결</span>
-                </div>
+        <div className="card p-6 hover:shadow-medium transition-shadow duration-300 animate-slide-in" style={{ animationDelay: '0.1s' }}>
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <div className="w-12 h-12 bg-gradient-to-br from-secondary-400 to-secondary-600 rounded-xl flex items-center justify-center shadow-soft">
+                <span className="text-white text-lg font-semibold">결</span>
               </div>
-              <div className="ml-5 flex-1 min-w-0">
-                <dl>
-                  <dt className="text-sm font-medium text-gray-500">결재 대기</dt>
-                  <dd className="text-lg font-medium text-gray-900">5</dd>
-                </dl>
-              </div>
+            </div>
+            <div className="ml-4 flex-1 min-w-0">
+              <dl>
+                <dt className="text-sm font-medium text-neutral-500 dark:text-neutral-400">결재 대기</dt>
+                <dd className="text-2xl font-bold text-neutral-900 dark:text-neutral-100 mt-1">5</dd>
+              </dl>
             </div>
           </div>
         </div>
-        <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="p-5">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-yellow-500 rounded-md flex items-center justify-center">
-                  <span className="text-white text-sm font-medium">공</span>
-                </div>
+        <div className="card p-6 hover:shadow-medium transition-shadow duration-300 animate-slide-in" style={{ animationDelay: '0.2s' }}>
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <div className="w-12 h-12 bg-gradient-to-br from-accent-400 to-accent-600 rounded-xl flex items-center justify-center shadow-soft">
+                <span className="text-white text-lg font-semibold">공</span>
               </div>
-              <div className="ml-5 flex-1 min-w-0">
-                <dl>
-                  <dt className="text-sm font-medium text-gray-500">공지</dt>
-                  <dd className="text-lg font-medium text-gray-900">2</dd>
-                </dl>
-              </div>
+            </div>
+            <div className="ml-4 flex-1 min-w-0">
+              <dl>
+                <dt className="text-sm font-medium text-neutral-500 dark:text-neutral-400">공지</dt>
+                <dd className="text-2xl font-bold text-neutral-900 dark:text-neutral-100 mt-1">2</dd>
+              </dl>
             </div>
           </div>
         </div>
-        <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="p-5">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-red-500 rounded-md flex items-center justify-center">
-                  <span className="text-white text-sm font-medium">메</span>
-                </div>
+        <div className="card p-6 hover:shadow-medium transition-shadow duration-300 animate-slide-in" style={{ animationDelay: '0.3s' }}>
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <div className="w-12 h-12 bg-gradient-to-br from-red-400 to-red-600 rounded-xl flex items-center justify-center shadow-soft">
+                <span className="text-white text-lg font-semibold">메</span>
               </div>
-              <div className="ml-5 flex-1 min-w-0">
-                <dl>
-                  <dt className="text-sm font-medium text-gray-500">미확인 메시지</dt>
-                  <dd className="text-lg font-medium text-gray-900">12</dd>
-                </dl>
-              </div>
+            </div>
+            <div className="ml-4 flex-1 min-w-0">
+              <dl>
+                <dt className="text-sm font-medium text-neutral-500 dark:text-neutral-400">미확인 메시지</dt>
+                <dd className="text-2xl font-bold text-neutral-900 dark:text-neutral-100 mt-1">12</dd>
+              </dl>
             </div>
           </div>
         </div>
@@ -145,26 +140,33 @@ const Dashboard: React.FC = () => {
         </div>
       </div>
       <div className="mt-8">
-        <h2 className="text-lg font-medium text-gray-900 mb-4">분석 차트</h2>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <h2 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100 font-display mb-6">분석 차트</h2>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* 출근 현황 차트 */}
-          <div className="bg-white p-6 rounded-lg shadow">
-            <h3 className="text-md font-medium text-gray-900 mb-4">주간 출근 현황</h3>
+          <div className="card p-6">
+            <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-6">주간 출근 현황</h3>
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={attendanceData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="출근" fill="#3B82F6" />
-                <Bar dataKey="결근" fill="#EF4444" />
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis dataKey="name" stroke="#6b7280" />
+                <YAxis stroke="#6b7280" />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                  }}
+                />
+                <Bar dataKey="출근" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="결근" fill="#ef4444" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
 
           {/* 프로젝트 현황 차트 */}
-          <div className="bg-white p-6 rounded-lg shadow">
-            <h3 className="text-md font-medium text-gray-900 mb-4">프로젝트 현황</h3>
+          <div className="card p-6">
+            <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-6">프로젝트 현황</h3>
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>
                 <Pie
@@ -187,17 +189,24 @@ const Dashboard: React.FC = () => {
           </div>
 
           {/* 결재 추이 차트 */}
-          <div className="bg-white p-6 rounded-lg shadow lg:col-span-2">
-            <h3 className="text-md font-medium text-gray-900 mb-4">결재 현황 추이</h3>
+          <div className="card p-6 lg:col-span-2">
+            <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-6">결재 현황 추이</h3>
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={approvalData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis />
-                <Tooltip />
-                <Line type="monotone" dataKey="승인" stroke="#10B981" strokeWidth={2} />
-                <Line type="monotone" dataKey="거절" stroke="#EF4444" strokeWidth={2} />
-                <Line type="monotone" dataKey="대기" stroke="#F59E0B" strokeWidth={2} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis dataKey="month" stroke="#6b7280" />
+                <YAxis stroke="#6b7280" />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                  }}
+                />
+                <Line type="monotone" dataKey="승인" stroke="#10b981" strokeWidth={3} dot={{ fill: '#10b981', strokeWidth: 2, r: 6 }} />
+                <Line type="monotone" dataKey="거절" stroke="#ef4444" strokeWidth={3} dot={{ fill: '#ef4444', strokeWidth: 2, r: 6 }} />
+                <Line type="monotone" dataKey="대기" stroke="#f59e0b" strokeWidth={3} dot={{ fill: '#f59e0b', strokeWidth: 2, r: 6 }} />
               </LineChart>
             </ResponsiveContainer>
           </div>

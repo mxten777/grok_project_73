@@ -1,13 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { DocumentTextIcon, PlusIcon, ClockIcon, CheckCircleIcon, XCircleIcon } from '@heroicons/react/24/outline';
+import { DocumentTextIcon, PlusIcon, ClockIcon, CheckCircleIcon, XCircleIcon, DocumentArrowDownIcon } from '@heroicons/react/24/outline';
 import VacationApprovalForm from '../components/organisms/VacationApprovalForm';
 import { useAuth } from '../hooks/useAuth';
+import { useApprovals } from '../hooks/useApprovals';
+import { generateApprovalPDF, downloadPDF } from '../utils/pdfUtils';
 
 const Approvals: React.FC = () => {
   const { user } = useAuth();
+  const {
+    pendingApprovals,
+    myRequests,
+    approvalHistory,
+    loading,
+    processApproval,
+  } = useApprovals();
   const [showNewApproval, setShowNewApproval] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<'pending' | 'my-requests' | 'history'>('pending');
 
   const approvalTemplates = [
@@ -16,27 +24,6 @@ const Approvals: React.FC = () => {
     { id: 'purchase', name: '구매 요청서', icon: '🛒', description: '물품/서비스 구매 승인' },
     { id: 'quote', name: '견적서 승인', icon: '📋', description: '거래처 견적 승인' },
     { id: 'contract', name: '계약서 승인', icon: '📄', description: '계약 체결 승인' },
-  ];
-
-  const pendingApprovals = [
-    {
-      id: '1',
-      type: 'vacation',
-      title: '연차 휴가 신청',
-      requester: '홍길동',
-      status: 'reviewing',
-      createdAt: '2025-12-05',
-      amount: null,
-    },
-    {
-      id: '2',
-      type: 'expense',
-      title: '출장비 지출 결의',
-      requester: '김철수',
-      status: 'submitted',
-      createdAt: '2025-12-04',
-      amount: '150,000원',
-    },
   ];
 
   const getStatusIcon = (status: string) => {
@@ -72,6 +59,53 @@ const Approvals: React.FC = () => {
       case 'approved': return '승인';
       case 'rejected': return '반려';
       default: return '알 수 없음';
+    }
+  };
+
+  const getApprovalTypeText = (type: string) => {
+    const typeMap: { [key: string]: string } = {
+      vacation: '휴가 신청서',
+      expense: '지출 결의서',
+      purchase: '구매 요청서',
+      quote: '견적서 승인',
+      contract: '계약서 승인',
+    };
+    return typeMap[type] || type;
+  };
+
+  const handleApprove = async (approvalId: string) => {
+    if (!confirm('이 결재를 승인하시겠습니까?')) return;
+
+    try {
+      await processApproval(approvalId, 'approved');
+      alert('결재가 승인되었습니다.');
+    } catch (error) {
+      console.error('승인 처리 실패:', error);
+      alert('승인 처리에 실패했습니다.');
+    }
+  };
+
+  const handleReject = async (approvalId: string) => {
+    const comment = prompt('반려 사유를 입력해주세요:');
+    if (comment === null) return; // Cancelled
+
+    try {
+      await processApproval(approvalId, 'rejected', comment);
+      alert('결재가 반려되었습니다.');
+    } catch (error) {
+      console.error('반려 처리 실패:', error);
+      alert('반려 처리에 실패했습니다.');
+    }
+  };
+
+  const handleDownloadPDF = async (approval: any) => {
+    try {
+      const pdfBlob = await generateApprovalPDF(approval);
+      const filename = `${approval.title}_${approval.id}.pdf`;
+      downloadPDF(pdfBlob, filename);
+    } catch (error) {
+      console.error('PDF 생성 실패:', error);
+      alert('PDF 생성에 실패했습니다.');
     }
   };
 
@@ -163,7 +197,9 @@ const Approvals: React.FC = () => {
           </h3>
         </div>
         <ul className="divide-y divide-gray-200">
-          {pendingApprovals
+          {(activeTab === 'pending' ? pendingApprovals :
+            activeTab === 'my-requests' ? myRequests :
+            approvalHistory)
             .filter((approval) => {
               if (activeTab === 'pending') return approval.status === 'submitted' || approval.status === 'reviewing';
               if (activeTab === 'my-requests') return true; // 실제로는 현재 사용자의 결재만 필터링
@@ -177,10 +213,10 @@ const Approvals: React.FC = () => {
                   <div className="flex items-center">
                     {getStatusIcon(approval.status)}
                     <div className="ml-3">
-                      <p className="text-sm font-medium text-gray-900">{approval.title}</p>
-                      <p className="text-sm text-gray-500">신청자: {approval.requester}</p>
-                      {approval.amount && (
-                        <p className="text-sm text-gray-500">금액: {approval.amount}</p>
+                      <p className="text-sm font-medium text-gray-900">{getApprovalTypeText(approval.type)}</p>
+                      <p className="text-sm text-gray-500">신청자: {approval.requesterId}</p>
+                      {approval.data && (approval.data as any).amount && (
+                        <p className="text-sm text-gray-500">금액: {(approval.data as any).amount}</p>
                       )}
                     </div>
                   </div>
@@ -188,15 +224,36 @@ const Approvals: React.FC = () => {
                     <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(approval.status)}`}>
                       {getStatusText(approval.status)}
                     </span>
-                    <span className="text-sm text-gray-500">{approval.createdAt}</span>
-                    <button className="text-blue-600 hover:text-blue-900 text-sm font-medium">
-                      상세보기
-                    </button>
+                    <div className="flex items-center space-x-2">
+                      <button
+                        onClick={() => handleDownloadPDF(approval)}
+                        className="inline-flex items-center px-2 py-1 border border-gray-300 text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                        title="PDF 다운로드"
+                      >
+                        <DocumentArrowDownIcon className="h-4 w-4" />
+                      </button>
+                      {activeTab === 'pending' && (
+                        <div className="flex space-x-2">
+                          <button
+                            onClick={() => handleApprove(approval.id)}
+                            className="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                          >
+                            승인
+                          </button>
+                          <button
+                            onClick={() => handleReject(approval.id)}
+                            className="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                          >
+                            반려
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
             </li>
-          ))}
+            ))}
         </ul>
         {pendingApprovals.filter((approval) => {
           if (activeTab === 'pending') return approval.status === 'submitted' || approval.status === 'reviewing';

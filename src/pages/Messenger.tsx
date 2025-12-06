@@ -2,6 +2,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useChat } from '../hooks/useChat';
 import { useAuth } from '../hooks/useAuth';
 import { PaperAirplaneIcon, PlusIcon, ChatBubbleLeftIcon, UsersIcon, MegaphoneIcon } from '@heroicons/react/24/outline';
+import { collection, getDocs } from 'firebase/firestore';
+import { db } from '../firebase/config';
+import MessageItem from '../components/molecules/MessageItem';
+import MentionInput from '../components/molecules/MentionInput';
+import { messageService } from '../firebase/services';
 
 const Messenger: React.FC = () => {
   const { user } = useAuth();
@@ -14,11 +19,22 @@ const Messenger: React.FC = () => {
     selectChat,
     sendMessage,
     createChat,
+    markAsRead,
+    startTyping,
+    stopTyping,
+    uploadFile,
   } = useChat();
 
   const [messageInput, setMessageInput] = useState('');
   const [showNewChat, setShowNewChat] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  console.log('Messenger: Component rendered', { user, chats, loading, currentChat, messages });
+
+  // Debug info
+  useEffect(() => {
+    console.log('Messenger: useEffect triggered', { user: user?.uid });
+  }, [user]);
 
   // Initial loading of chats
   useEffect(() => {
@@ -45,19 +61,79 @@ const Messenger: React.FC = () => {
     }
   };
 
+  const handleCreateSampleData = async () => {
+    // 샘플 데이터 생성 로직 (필요시 구현)
+    console.log('Creating sample data...');
+  };
+
   const handleCreateChat = async (type: 'direct' | 'group' | 'notice') => {
     try {
-      // For demo purposes, create chat with system user
-      // In real app, this should open a user selection dialog
-      const systemUserId = 'system-user';
-      const chatName = type === 'group' ? '새 그룹 채팅' :
-                      type === 'notice' ? '공지사항' : '새 채팅';
-
-      await createChat([systemUserId], chatName, type);
+      const participants = ['dev-user-123', 'user-1']; // 샘플 참가자
+      const name = type === 'direct' ? undefined : `${type} 채팅`;
+      await createChat(participants, name, type);
       setShowNewChat(false);
     } catch (error) {
       console.error('Failed to create chat:', error);
-      alert('채팅방 생성에 실패했습니다.');
+    }
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !currentChat) return;
+
+    try {
+      const fileUrl = await uploadFile(file);
+      const fileType = file.type.startsWith('image/') ? 'image' : 'file';
+      await sendMessage(file.name, fileType, fileUrl);
+    } catch (error) {
+      console.error('Failed to upload file:', error);
+      alert('파일 업로드에 실패했습니다.');
+    }
+  };
+
+  const handleTestConnection = async () => {
+    try {
+      console.log('Testing Firestore connection...');
+      const testDoc = await getDocs(collection(db, 'chats'));
+      console.log('Connection test successful, docs count:', testDoc.docs.length);
+      alert(`Firestore 연결 성공! ${testDoc.docs.length}개의 문서가 있습니다.`);
+    } catch (error) {
+      console.error('Connection test failed:', error);
+      alert(`Firestore 연결 실패: ${error}`);
+    }
+  };
+
+  const handleAddReaction = async (messageId: string, emoji: string) => {
+    if (!user?.uid) return;
+
+    try {
+      console.log('Adding reaction:', messageId, emoji);
+      // Firestore 업데이트
+      await messageService.updateMessage(messageId, {
+        reactions: {
+          [emoji]: [...(messages.find(m => m.id === messageId)?.reactions[emoji] || []), user.uid]
+        }
+      });
+    } catch (error) {
+      console.error('Failed to add reaction:', error);
+    }
+  };
+
+  const handleRemoveReaction = async (messageId: string, emoji: string) => {
+    if (!user?.uid) return;
+
+    try {
+      console.log('Removing reaction:', messageId, emoji);
+      // Firestore 업데이트
+      const currentReactions = messages.find(m => m.id === messageId)?.reactions[emoji] || [];
+      const updatedReactions = currentReactions.filter(id => id !== user.uid);
+      await messageService.updateMessage(messageId, {
+        reactions: {
+          [emoji]: updatedReactions
+        }
+      });
+    } catch (error) {
+      console.error('Failed to remove reaction:', error);
     }
   };
 
@@ -88,12 +164,33 @@ const Messenger: React.FC = () => {
         <div className="p-4 border-b border-gray-200">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-gray-900">메신저</h2>
-            <button
-              onClick={() => setShowNewChat(!showNewChat)}
-              className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100"
-            >
-              <PlusIcon className="h-5 w-5" />
-            </button>
+            <div className="flex items-center space-x-2">
+              {loading && <div className="text-xs text-gray-500">로딩중...</div>}
+              <button
+                onClick={handleTestConnection}
+                className="px-3 py-1 text-xs bg-purple-500 text-white rounded hover:bg-purple-600"
+              >
+                연결 테스트
+              </button>
+              <button
+                onClick={handleCreateSampleData}
+                className="px-3 py-1 text-xs bg-green-500 text-white rounded hover:bg-green-600"
+              >
+                샘플 추가
+              </button>
+              <button
+                onClick={() => loadChats()}
+                className="px-3 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600"
+              >
+                새로고침
+              </button>
+              <button
+                onClick={() => setShowNewChat(!showNewChat)}
+                className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100"
+              >
+                <PlusIcon className="h-5 w-5" />
+              </button>
+            </div>
           </div>
 
           {showNewChat && (
@@ -184,46 +281,64 @@ const Messenger: React.FC = () => {
 
             {/* Messages */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
-              {messages.map((message) => (
-                <div
-                  key={message.id}
-                  className={`flex ${message.senderId === user?.uid ? 'justify-end' : 'justify-start'}`}
-                >
-                  <div
-                    className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                      message.senderId === user?.uid
-                        ? 'bg-blue-500 text-white'
-                        : 'bg-white text-gray-900 border border-gray-200'
-                    }`}
-                  >
-                    <p className="text-sm">{message.content}</p>
-                    <p
-                      className={`text-xs mt-1 ${
-                        message.senderId === user?.uid ? 'text-blue-100' : 'text-gray-500'
-                      }`}
-                    >
-                      {formatTime(message.createdAt)}
-                    </p>
+              {/* Typing Indicator */}
+              {currentChat?.typingUsers && currentChat.typingUsers.length > 0 && (
+                <div className="flex items-center space-x-2 text-sm text-gray-500 animate-pulse">
+                  <div className="flex space-x-1">
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
                   </div>
+                  <span>
+                    {currentChat.typingUsers.length === 1
+                      ? '누군가가 입력 중...'
+                      : `${currentChat.typingUsers.length}명이 입력 중...`}
+                  </span>
                 </div>
+              )}
+
+              {messages.map((message) => (
+                <MessageItem
+                  key={message.id}
+                  message={message}
+                  isOwn={message.senderId === user?.uid}
+                  onAddReaction={handleAddReaction}
+                  onRemoveReaction={handleRemoveReaction}
+                />
               ))}
               <div ref={messagesEndRef} />
             </div>
 
             {/* Message Input */}
-            <div className="bg-white border-t border-gray-200 p-4">
+            <div className="bg-white dark:bg-neutral-800 border-t border-neutral-200 dark:border-neutral-700 p-4">
               <form onSubmit={handleSendMessage} className="flex space-x-4">
-                <input
-                  type="text"
-                  value={messageInput}
-                  onChange={(e) => setMessageInput(e.target.value)}
-                  placeholder="메시지를 입력하세요..."
-                  className="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
+                <div className="flex-1 flex items-center space-x-2">
+                  <label className="cursor-pointer">
+                    <PlusIcon className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                    <input
+                      type="file"
+                      onChange={handleFileUpload}
+                      accept="image/*,.pdf,.doc,.docx,.txt"
+                      className="hidden"
+                    />
+                  </label>
+                  <MentionInput
+                    value={messageInput}
+                    onChange={setMessageInput}
+                    onMention={(userId, username) => {
+                      // 멘션 처리 로직 (필요시 구현)
+                      console.log('Mention:', userId, username);
+                    }}
+                    onTypingStart={startTyping}
+                    onTypingStop={stopTyping}
+                    placeholder="메시지를 입력하세요... (@로 멘션)"
+                    className="flex-1 input"
+                  />
+                </div>
                 <button
                   type="submit"
                   disabled={!messageInput.trim()}
-                  className="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="btn btn-primary px-6 py-2"
                 >
                   <PaperAirplaneIcon className="h-5 w-5" />
                 </button>

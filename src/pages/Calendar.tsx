@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ChevronLeftIcon, ChevronRightIcon, PlusIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { useCalendar } from '../hooks/useCalendar';
 import { useAuth } from '../hooks/useAuth';
 import { Dialog } from '@headlessui/react';
-import { CalendarEvent } from '../firebase/calendarServices';
+import { CalendarEvent, Attendee } from '../firebase/calendarServices';
 
 const Calendar: React.FC = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -11,6 +11,7 @@ const Calendar: React.FC = () => {
   const [showNewEvent, setShowNewEvent] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [filterType, setFilterType] = useState<string>('all');
+  const [meetingRooms, setMeetingRooms] = useState<string[]>([]);
   const [newEventForm, setNewEventForm] = useState({
     title: '',
     description: '',
@@ -21,9 +22,42 @@ const Calendar: React.FC = () => {
     allDay: false,
     type: 'meeting' as 'meeting' | 'personal' | 'deadline' | 'other',
     location: '',
+    visibility: 'private' as 'private' | 'team' | 'public',
+    teamId: '',
+    meetingRoom: '',
+    meetingLink: '',
+    agenda: '',
+    attendees: [] as Attendee[],
   });
-  const { loading, createEvent, getEventsForDate } = useCalendar();
+  const { 
+    loading, 
+    createEvent, 
+    getEventsForDate,
+    teamEvents,
+    publicEvents,
+    invitedEvents,
+    respondToInvitation,
+    checkRoomAvailability,
+    getAllMeetingRooms,
+    loadTeamEvents,
+    loadPublicEvents,
+    getAllVisibleEvents
+  } = useCalendar();
   const { user } = useAuth();
+
+  // Load meeting rooms
+  useEffect(() => {
+    const loadMeetingRooms = async () => {
+      try {
+        const rooms = await getAllMeetingRooms();
+        setMeetingRooms(rooms);
+      } catch (error) {
+        console.error('Failed to load meeting rooms:', error);
+      }
+    };
+
+    loadMeetingRooms();
+  }, [getAllMeetingRooms]);
 
   const today = new Date();
 
@@ -69,6 +103,35 @@ const Calendar: React.FC = () => {
     });
   };
 
+  const getEventsForDay = (day: number) => {
+    const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
+    let allEvents = getEventsForDate(date);
+
+    // 필터 적용
+    switch (filterType) {
+      case 'my':
+        allEvents = allEvents.filter(event => event.createdBy === user?.uid);
+        break;
+      case 'team':
+        allEvents = allEvents.filter(event => event.visibility === 'team' || event.visibility === 'public');
+        break;
+      case 'public':
+        allEvents = allEvents.filter(event => event.visibility === 'public');
+        break;
+      case 'all':
+      default:
+        // 모든 이벤트 표시 (개인 일정은 본인만, 팀/공개 일정은 모두)
+        allEvents = allEvents.filter(event => 
+          event.createdBy === user?.uid || 
+          event.visibility === 'team' || 
+          event.visibility === 'public'
+        );
+        break;
+    }
+
+    return allEvents;
+  };
+
   const isToday = (day: number) => {
     return (
       day === today.getDate() &&
@@ -79,12 +142,6 @@ const Calendar: React.FC = () => {
 
   // Get events for the current month
   // const monthEvents = getEventsForMonth(currentDate.getFullYear(), currentDate.getMonth());
-
-  const getEventsForDay = (day: number) => {
-    const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
-    const events = getEventsForDate(date);
-    return filterType === 'all' ? events : events.filter(event => event.type === filterType);
-  };
 
   const getEventColor = (type: string) => {
     switch (type) {
@@ -116,6 +173,20 @@ const Calendar: React.FC = () => {
         ? new Date(newEventForm.endDate || newEventForm.startDate)
         : new Date(`${newEventForm.endDate || newEventForm.startDate}T${newEventForm.endTime}`);
 
+      // Check meeting room availability if it's a meeting with a room
+      if (newEventForm.type === 'meeting' && newEventForm.meetingRoom.trim()) {
+        const isAvailable = await checkRoomAvailability(
+          newEventForm.meetingRoom,
+          startDateTime,
+          endDateTime
+        );
+        
+        if (!isAvailable) {
+          alert('선택한 회의실이 해당 시간에 이미 예약되어 있습니다. 다른 시간이나 회의실을 선택해주세요.');
+          return;
+        }
+      }
+
       await createEvent({
         title: newEventForm.title,
         description: newEventForm.description,
@@ -124,6 +195,12 @@ const Calendar: React.FC = () => {
         allDay: newEventForm.allDay,
         type: newEventForm.type,
         location: newEventForm.location,
+        visibility: newEventForm.visibility,
+        teamId: newEventForm.visibility === 'team' ? 'default-team' : undefined,
+        meetingRoom: newEventForm.meetingRoom,
+        meetingLink: newEventForm.meetingLink,
+        agenda: newEventForm.agenda,
+        attendees: newEventForm.attendees,
         createdBy: user.uid,
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -140,6 +217,12 @@ const Calendar: React.FC = () => {
         allDay: false,
         type: 'meeting',
         location: '',
+        visibility: 'private',
+        teamId: '',
+        meetingRoom: '',
+        meetingLink: '',
+        agenda: '',
+        attendees: [],
       });
       setShowNewEvent(false);
     } catch (error) {
@@ -166,6 +249,55 @@ const Calendar: React.FC = () => {
         </div>
       ) : (
         <>
+          {/* Meeting Invitations */}
+          {invitedEvents.length > 0 && (
+            <div className="bg-white shadow rounded-lg">
+              <div className="px-6 py-4 border-b border-gray-200">
+                <h3 className="text-lg font-medium text-gray-900">회의 초대</h3>
+              </div>
+              <div className="p-6">
+                <div className="space-y-4">
+                  {invitedEvents.map((event) => {
+                    const myAttendance = event.attendees?.find(a => a.userId === user?.uid);
+                    if (myAttendance?.status !== 'pending') return null;
+                    
+                    return (
+                      <div key={event.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                        <div className="flex-1">
+                          <h4 className="text-sm font-medium text-gray-900">{event.title}</h4>
+                          <p className="text-sm text-gray-500">
+                            {new Date(event.startDate).toLocaleString('ko-KR')} - {event.endDate ? new Date(event.endDate).toLocaleString('ko-KR') : '종일'}
+                          </p>
+                          {event.location && <p className="text-sm text-gray-500">{event.location}</p>}
+                        </div>
+                        <div className="flex space-x-2">
+                          <button
+                            onClick={() => respondToInvitation(event.id!, 'accepted')}
+                            className="px-3 py-1 text-sm bg-green-600 text-white rounded-md hover:bg-green-700"
+                          >
+                            수락
+                          </button>
+                          <button
+                            onClick={() => respondToInvitation(event.id!, 'declined')}
+                            className="px-3 py-1 text-sm bg-red-600 text-white rounded-md hover:bg-red-700"
+                          >
+                            거절
+                          </button>
+                          <button
+                            onClick={() => respondToInvitation(event.id!, 'tentative')}
+                            className="px-3 py-1 text-sm bg-yellow-600 text-white rounded-md hover:bg-yellow-700"
+                          >
+                            미정
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Calendar Header */}
           <div className="bg-white shadow rounded-lg">
             <div className="px-6 py-4 border-b border-gray-200">
@@ -205,6 +337,18 @@ const Calendar: React.FC = () => {
                     >
                       일
                     </button>
+                  </div>
+                  <div className="flex items-center space-x-4">
+                    <select
+                      value={filterType}
+                      onChange={(e) => setFilterType(e.target.value)}
+                      className="px-3 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="all">모든 일정</option>
+                      <option value="my">내 일정</option>
+                      <option value="team">팀 일정</option>
+                      <option value="public">공개 일정</option>
+                    </select>
                   </div>
                 </div>
                 <div className="flex items-center space-x-4">
@@ -369,6 +513,21 @@ const Calendar: React.FC = () => {
                 </select>
               </div>
 
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  공개 범위
+                </label>
+                <select
+                  value={newEventForm.visibility}
+                  onChange={(e) => setNewEventForm(prev => ({ ...prev, visibility: e.target.value as 'private' | 'team' | 'public' }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="private">비공개 (나만 보기)</option>
+                  <option value="team">팀 공유 (팀원만 보기)</option>
+                  <option value="public">전체 공개 (모든 사용자)</option>
+                </select>
+              </div>
+
               <div className="flex items-center">
                 <input
                   type="checkbox"
@@ -445,9 +604,56 @@ const Calendar: React.FC = () => {
                   value={newEventForm.location}
                   onChange={(e) => setNewEventForm(prev => ({ ...prev, location: e.target.value }))}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="장소를 입력하세요"
+                  placeholder="회의 장소를 입력하세요"
                 />
               </div>
+
+              {newEventForm.type === 'meeting' && (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      회의실
+                    </label>
+                    <select
+                      value={newEventForm.meetingRoom}
+                      onChange={(e) => setNewEventForm(prev => ({ ...prev, meetingRoom: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="">회의실 선택</option>
+                      <option value="회의실 A">회의실 A</option>
+                      <option value="회의실 B">회의실 B</option>
+                      <option value="회의실 C">회의실 C</option>
+                      <option value="소회의실">소회의실</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      화상회의 링크
+                    </label>
+                    <input
+                      type="url"
+                      value={newEventForm.meetingLink}
+                      onChange={(e) => setNewEventForm(prev => ({ ...prev, meetingLink: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="https://meet.google.com/..."
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      회의 안건
+                    </label>
+                    <textarea
+                      value={newEventForm.agenda}
+                      onChange={(e) => setNewEventForm(prev => ({ ...prev, agenda: e.target.value }))}
+                      rows={3}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="회의 안건을 입력하세요"
+                    />
+                  </div>
+                </>
+              )}
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -461,6 +667,99 @@ const Calendar: React.FC = () => {
                   placeholder="일정에 대한 설명을 입력하세요"
                 />
               </div>
+
+              {newEventForm.type === 'meeting' && (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      회의실
+                    </label>
+                    <input
+                      type="text"
+                      value={newEventForm.meetingRoom}
+                      onChange={(e) => setNewEventForm(prev => ({ ...prev, meetingRoom: e.target.value }))}
+                      list="meeting-rooms"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="회의실 이름을 입력하세요"
+                    />
+                    <datalist id="meeting-rooms">
+                      {meetingRooms.map((room) => (
+                        <option key={room} value={room} />
+                      ))}
+                    </datalist>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      화상회의 링크
+                    </label>
+                    <input
+                      type="url"
+                      value={newEventForm.meetingLink}
+                      onChange={(e) => setNewEventForm(prev => ({ ...prev, meetingLink: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="https://meet.google.com/..."
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      안건
+                    </label>
+                    <textarea
+                      value={newEventForm.agenda}
+                      onChange={(e) => setNewEventForm(prev => ({ ...prev, agenda: e.target.value }))}
+                      rows={2}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="회의 안건을 입력하세요"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      참석자
+                    </label>
+                    <div className="space-y-2">
+                      {newEventForm.attendees.map((attendee, index) => (
+                        <div key={index} className="flex items-center space-x-2">
+                          <input
+                            type="email"
+                            value={attendee.userId}
+                            onChange={(e) => {
+                              const updatedAttendees = [...newEventForm.attendees];
+                              updatedAttendees[index] = { ...attendee, userId: e.target.value };
+                              setNewEventForm(prev => ({ ...prev, attendees: updatedAttendees }));
+                            }}
+                            className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="참석자 이메일을 입력하세요"
+                          />
+                          <button
+                            onClick={() => {
+                              const updatedAttendees = newEventForm.attendees.filter((_, i) => i !== index);
+                              setNewEventForm(prev => ({ ...prev, attendees: updatedAttendees }));
+                            }}
+                            className="p-2 text-red-500 hover:text-red-700"
+                          >
+                            <XMarkIcon className="h-5 w-5" />
+                          </button>
+                        </div>
+                      ))}
+                      <button
+                        onClick={() => {
+                          setNewEventForm(prev => ({
+                            ...prev,
+                            attendees: [...prev.attendees, { userId: '', status: 'pending' }]
+                          }));
+                        }}
+                        className="flex items-center space-x-2 text-blue-600 hover:text-blue-800"
+                      >
+                        <PlusIcon className="h-5 w-5" />
+                        <span>참석자 추가</span>
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
 
             <div className="flex justify-end space-x-3 p-6 border-t border-gray-200">
