@@ -41,6 +41,12 @@ const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
               <Link
                 key={item.name}
                 to={item.href}
+                onClick={() => {
+                  // 모바일에서 메뉴 클릭 시 사이드바 자동 닫기
+                  if (onClose && window.innerWidth < 768) { // md breakpoint (768px) 이하에서만
+                    onClose();
+                  }
+                }}
                 className={`${
                   isActive
                     ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300 border-r-2 border-primary-500'
