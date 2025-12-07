@@ -73,8 +73,20 @@ const Messenger: React.FC = () => {
       const name = type === 'direct' ? undefined : `${type} 채팅`;
       await createChat(participants, name, type);
       setShowNewChat(false);
+      // 모바일에서 새 채팅 생성 시 사이드바 닫기
+      if (window.innerWidth < 1024) {
+        setShowSidebar(false);
+      }
     } catch (error) {
       console.error('Failed to create chat:', error);
+    }
+  };
+
+  const handleChatSelect = async (chat: any) => {
+    await selectChat(chat);
+    // 모바일에서 채팅방 선택 시 사이드바 자동 닫기
+    if (window.innerWidth < 1024) { // lg breakpoint (1024px) 이하에서만
+      setShowSidebar(false);
     }
   };
 
@@ -268,7 +280,7 @@ const Messenger: React.FC = () => {
               {chats.map((chat) => (
                 <button
                   key={chat.id}
-                  onClick={() => selectChat(chat)}
+                  onClick={() => handleChatSelect(chat)}
                   className={`w-full p-4 text-left hover:bg-gray-50 focus:outline-none focus:bg-gray-50 ${
                     currentChat?.id === chat.id ? 'bg-blue-50 border-r-2 border-blue-500' : ''
                   }`}
